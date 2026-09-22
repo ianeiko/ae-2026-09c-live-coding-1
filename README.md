@@ -94,7 +94,7 @@ Open `claude` in the repo. Prompt zero — the Agent and the first Experiment:
 That gives you a running Agent (Appendix B: `uv run langgraph dev`, then chat with
 it in LangGraph Studio) and a first Experiment URL.
 
-Prompt one — your own Rubric and an Example you expect to fail:
+Prompt one — your own Rubric, a fourth Example, and a prediction about it:
 
 > Read ISSUE-1.md and implement it. Ask me for the four Rubric levels, and for my prediction, before you edit anything. Stop and tell me if one of its five acceptance checks fails; commit when they all pass.
 
