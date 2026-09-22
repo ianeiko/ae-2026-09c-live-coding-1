@@ -61,10 +61,14 @@ Name: `interview-coach-09c`. The eval script creates it if it does not exist and
 otherwise reuses it by name — running the eval twice must not make a second
 Dataset, and must not duplicate the Examples.
 
-Each Example: `inputs = {"question": ..., "draft_answer": ...}` and
-`reference_outputs = {"expected_behavior": ...}`. `expected_behavior` is prose
-describing what a good Agent answer does — notes for the Judge, not gold text to
-match.
+Each Example has `inputs = {"question": ..., "draft_answer": ...}` and one
+reference output, `expected_behavior`: prose describing what a good Agent answer
+does — notes for the Judge, not gold text to match.
+
+Mind the two names for the one thing. On the Dataset side that field is
+**`outputs`**; `create_examples` silently drops a dict keyed `reference_outputs`
+and you get Examples with no expected behavior at all. `reference_outputs` is what
+the *Evaluator* receives it as (§6).
 
 Three Examples:
 
@@ -234,6 +238,7 @@ Stop and report on the first check that fails. Do not commit a failing check.
 | `langgraph dev` starts but Studio shows no graph | `langgraph.json` does not point at the module-level compiled graph | §2 — export the compiled graph, not a factory |
 | `langgraph: command not found` | CLI not in the project | add `langgraph-cli[inmem]`, run `uv run langgraph dev` |
 | `ModuleNotFoundError` on the package `evals/run.py` imports | `uv sync` ran while the package directory was still empty, registering an empty editable install | write the package files before the first sync; to recover, `uv sync --reinstall-package <name>` |
+| Examples upload but `expected_behavior` is empty in LangSmith | `create_examples` takes `outputs`; a dict keyed `reference_outputs` is silently dropped | key the Dataset field `outputs`; `reference_outputs` is the Evaluator's argument name |
 | Dataset has 6 Examples after two runs | Examples added unconditionally | §3 — create only when absent |
 | The Dataset already exists with someone else's Examples | the name is shared and a previous run created it | reuse it — §3 says reuse by name; don't delete it, that orphans earlier Experiments |
 | A Feedback column is empty in LangSmith | Evaluator returned no `key`, or raised | one Evaluator per Feedback key, each returning its key |

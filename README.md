@@ -96,7 +96,7 @@ it in LangGraph Studio) and a first Experiment URL.
 
 Prompt one — your own Rubric and an Example you expect to fail:
 
-> Read ISSUE-1.md and implement it. Ask me for the four Rubric levels before you edit anything. Stop and tell me if one of its five acceptance checks fails; commit when they all pass.
+> Read ISSUE-1.md and implement it. Ask me for the four Rubric levels, and for my prediction, before you edit anything. Stop and tell me if one of its five acceptance checks fails; commit when they all pass.
 
 Claude records both Experiment URLs here when ISSUE-1 is done:
 
@@ -105,8 +105,16 @@ Claude records both Experiment URLs here when ISSUE-1 is done:
 | first (ISSUE-0) | vague / partial / actionable | 3 | _(filled in by ISSUE-0)_ |
 | second (ISSUE-1) | your four levels | 4 | _(filled in by ISSUE-1)_ |
 
-Open both in LangSmith and compare the `feedback_quality` column. That comparison
-is the point of the session.
+And your prediction for the Example you added, against what Jev said:
+
+| Your fourth Example | You predicted | Jev returned | Probabilities / confidence |
+| --- | --- | --- | --- |
+| all-Situation draft | _(filled in by ISSUE-1)_ | _(filled in by ISSUE-1)_ | _(filled in by ISSUE-1)_ |
+
+Open both Experiments in LangSmith and compare the `feedback_quality` column. That
+comparison is the point of the session — and if your prediction was wrong, that row
+is the most useful thing on this page. A Rubric that rates *critiques* does not rate
+*answers*: a bad draft is an easy draft to critique well.
 
 ## Appendix A — what should be on your machine
 
