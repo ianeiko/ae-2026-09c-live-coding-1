@@ -42,7 +42,11 @@ The system prompt is the contract:
 - Input is a behavioural interview question plus the learner's draft answer.
 - Critique each Beat — Situation, Task, Action, Result — one short paragraph each,
   named, in that order. Say plainly when a Beat is absent rather than inventing one.
-- Then a rewrite: the whole answer, improved, as the learner could say it.
+- Then a rewrite: the whole answer, improved, as the learner could say it. The
+  rewrite may not invent facts the draft does not contain — above all not an
+  outcome. Where a Beat is missing, the rewrite carries a marked placeholder the
+  learner fills in. A fabricated metric is one the learner recites in a real
+  interview.
 - If the input is not an interview answer, reply with one sentence redirecting the
   person back to a behavioural question, and nothing else. No critique, no rewrite.
 
@@ -186,7 +190,8 @@ Client().evaluate(
 
 `max_concurrency=1` keeps the trace readable and the shared keys unrattled. The
 script's last line of output is the Experiment URL and nothing else, so the learner
-can click it.
+can click it. Print the Dataset-scoped comparison URL — the view with one column
+per Feedback key — not the tracing-project URL.
 
 ## 8. Commit
 
@@ -228,5 +233,7 @@ Stop and report on the first check that fails. Do not commit a failing check.
 | 401 from OpenRouter, or a model that does not exist | `OPENROUTER_*` missing or a bad slug | §1 — no defaults; copy the slug from `.env` exactly |
 | `langgraph dev` starts but Studio shows no graph | `langgraph.json` does not point at the module-level compiled graph | §2 — export the compiled graph, not a factory |
 | `langgraph: command not found` | CLI not in the project | add `langgraph-cli[inmem]`, run `uv run langgraph dev` |
+| `ModuleNotFoundError` on the package `evals/run.py` imports | `uv sync` ran while the package directory was still empty, registering an empty editable install | write the package files before the first sync; to recover, `uv sync --reinstall-package <name>` |
 | Dataset has 6 Examples after two runs | Examples added unconditionally | §3 — create only when absent |
+| The Dataset already exists with someone else's Examples | the name is shared and a previous run created it | reuse it — §3 says reuse by name; don't delete it, that orphans earlier Experiments |
 | A Feedback column is empty in LangSmith | Evaluator returned no `key`, or raised | one Evaluator per Feedback key, each returning its key |
