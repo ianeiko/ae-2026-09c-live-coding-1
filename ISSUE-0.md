@@ -57,9 +57,11 @@ the Python version.
 
 ## 3. Dataset
 
-Name: `interview-coach-09c`. The eval script creates it if it does not exist and
-otherwise reuses it by name — running the eval twice must not make a second
-Dataset, and must not duplicate the Examples.
+Name: `interview-coach-09c`. The eval script creates it **with** the Examples below
+if it does not exist, and otherwise reuses it by name and leaves its Examples
+alone. Write Examples only on the create path: an existing Dataset is reused as it
+stands. Running the eval twice must not make a second Dataset and must not add a
+single Example.
 
 Each Example has `inputs = {"question": ..., "draft_answer": ...}` and one
 reference output, `expected_behavior`: prose describing what a good Agent answer
@@ -209,9 +211,15 @@ One commit, message `scaffold STAR coach agent + first jev experiment`.
    comes back as four named Beat critiques followed by a rewrite; a pasted recipe
    comes back as one redirect sentence and nothing else.
 3. `uv run python evals/run.py` ends by printing a LangSmith Experiment URL.
-4. That Experiment has 3 Examples and the four Feedback keys `covers_all_star`,
+4. That Experiment has the four Feedback keys `covers_all_star`,
    `feedback_quality`, `verdict`, `llm_covers_all_star`, each with a non-empty
-   comment.
+   comment, over **every** Example in the Dataset.
+
+   On a fresh LangSmith workspace that is the 3 Examples from §3. If
+   `interview-coach-09c` already exists there from an earlier run, it is whatever
+   that Dataset holds: reuse it as it stands, report the count, and do not delete
+   or overwrite it to make the number come out at 3 — that orphans the Experiments
+   already attached to it.
 5. The off-topic Example has `verdict = off_topic` and the lowest
    `feedback_quality` of the three; the other two Examples both score above it, and
    the strong Example's `verdict` is `strong`.
@@ -222,8 +230,9 @@ One commit, message `scaffold STAR coach agent + first jev experiment`.
    that praises four present Beats — Jev puts them within a few hundredths of each
    other. A ranking between them is not a thing this Rubric produces, and chasing
    one means editing Questions until the metric agrees with you.
-6. Running `uv run python evals/run.py` a second time reuses the Dataset — still 3
-   Examples, no second Dataset — and creates a second Experiment.
+6. Running `uv run python evals/run.py` a second time reuses the Dataset — same
+   Example count as the first run, no second Dataset — and creates a second
+   Experiment.
 
 Stop and report on the first check that fails. Do not commit a failing check.
 
