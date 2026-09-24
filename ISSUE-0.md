@@ -26,8 +26,7 @@ Dependencies, with these two pinned exactly:
 
 Load the root `.env` at import time (`load_dotenv()`), then read every value from
 the environment. No default values that stand in for a missing key: if
-`OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL`, `OPENROUTER_MODEL` or
-`TYPESAFE_API_KEY` is absent, raise with the variable's name. A hidden default is
+`OPENROUTER_API_KEY`, `OPENROUTER_BASE_URL` or `OPENROUTER_MODEL` is absent, raise with the variable's name. A hidden default is
 how a learner ends up debugging a 401 instead of reading a message.
 
 Never print a key value.
@@ -117,16 +116,26 @@ you see the numbers:
 If a number surprises you, fix the Question's wording — that is the lesson. Do not
 edit an Example until the number comes out the way you wanted.
 
-One `TypeSafeClassifier` call answers all three against the same State. Model
-pinned to `jev-1.13.0` — not `jev-latest`, which moves under the cohort.
+One `TypeSafeClassifier` call answers all three against the same State. Jev is
+reached through OpenRouter with the same `OPENROUTER_API_KEY` as the Agent — there is
+no separate TypeSafe key. Model is `~typesafe/jev-latest`, the alias for
+the newest Jev — it can move mid-cohort, so numbers may shift between runs. The classifier appends
+`/v1/systemone` to its `base_url`, so pass the OpenRouter base URL *without* its
+trailing `/v1`.
 
 ### The invocation contract — use this shape, verbatim
 
 ```python
+import os
+
 from langchain_typesafe import Choice, Noul, Score, TypeSafeClassifier
 
 # Built with NO questions. Questions go in the invoke payload.
-classifier = TypeSafeClassifier(model="jev-1.13.0")   # api_key from TYPESAFE_API_KEY
+classifier = TypeSafeClassifier(
+    model="~typesafe/jev-latest",
+    base_url=os.environ["OPENROUTER_BASE_URL"].removesuffix("/v1"),  # -> https://openrouter.ai/api
+    api_key=os.environ["OPENROUTER_API_KEY"],
+)
 
 response = classifier.invoke(
     {
@@ -242,7 +251,8 @@ Stop and report on the first check that fails. Do not commit a failing check.
 | --- | --- | --- |
 | `TypeSafeClassifier` raises on extra field `questions` | constructor-`questions` form from the blog repo | §5 — Questions go in the `invoke` payload |
 | `AttributeError` on `.answers[...]` / no `.nouls` | reading the raw dict instead of the typed response | use `.nouls`, `.scores`, `.choices` |
-| 401 from TypeSafe | `TYPESAFE_API_KEY` not loaded | `load_dotenv()` before constructing the classifier; `bash scripts/check.sh` |
+| 401 from the classifier | `api_key` not passed, so it fell back to an unset TypeSafe env var | pass `api_key=os.environ["OPENROUTER_API_KEY"]` explicitly — §5 |
+| 400 or 404 from `…/v1/systemone` | model `jev-1.13.0` (TypeSafe-direct ID), or `base_url` still ends in `/v1` | §5 — `~typesafe/jev-latest`, base URL with `/v1` stripped |
 | 401 from OpenRouter, or a model that does not exist | `OPENROUTER_*` missing or a bad slug | §1 — no defaults; copy the slug from `.env` exactly |
 | `langgraph dev` starts but Studio shows no graph | `langgraph.json` does not point at the module-level compiled graph | §2 — export the compiled graph, not a factory |
 | `langgraph: command not found` | CLI not in the project | add `langgraph-cli[inmem]`, run `uv run langgraph dev` |

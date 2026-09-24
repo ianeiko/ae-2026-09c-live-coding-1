@@ -22,9 +22,9 @@ for p in langchain-skills langsmith-skills; do
     || miss "$p plugin" "§3 — open claude in the repo, or: claude plugin install $p@langchain-plugins"
 done
 
-# The seven vars from .env.example, in the root .env. Placeholders don't count.
-envset() { grep -E "^$2=.+" "$1" 2>/dev/null | grep -vqE '=\s*(ts-\.\.\.|sk-or-v1-\.\.\.|lsv2_pt_\.\.\.|\.\.\.)\s*$'; }
-for v in TYPESAFE_API_KEY OPENROUTER_API_KEY OPENROUTER_BASE_URL OPENROUTER_MODEL \
+# The six vars from .env.example, in the root .env. Placeholders don't count.
+envset() { grep -E "^$2=.+" "$1" 2>/dev/null | grep -vqE '=\s*(sk-or-v1-\.\.\.|lsv2_pt_\.\.\.|\.\.\.)\s*$'; }
+for v in OPENROUTER_API_KEY OPENROUTER_BASE_URL OPENROUTER_MODEL \
          LANGSMITH_API_KEY LANGCHAIN_TRACING_V2 LANGSMITH_PROJECT; do
   envset .env "$v" && ok ".env $v" || miss ".env $v" "§1 Keys"
 done
@@ -33,18 +33,6 @@ getenv() { grep -E "^$1=" .env 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\r'
 online() { curl -s -m 5 -o /dev/null "$1" 2>/dev/null; }   # any HTTP answer means the net is up
 
 # Live key probes. Each one is skipped, not failed, when the host is unreachable.
-t=$(getenv TYPESAFE_API_KEY)
-if [ -n "$t" ]; then
-  code=$(curl -s -m 8 -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $t" https://api.typesafe.ai/v1/models)
-  case "$code" in
-    200)     ok "TypeSafe key accepted" ;;
-    401|403) miss "TypeSafe key rejected ($code)" "§1 Keys — check the TypeSafe key you were given" ;;
-    *)       online https://api.typesafe.ai/v1/models \
-               && ok "TypeSafe reachable (HTTP $code, key not checked)" \
-               || echo "skip     TypeSafe key probe (offline)" ;;
-  esac
-fi
-
 k=$(getenv OPENROUTER_API_KEY)
 if [ -n "$k" ]; then
   code=$(curl -s -m 8 -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $k" https://openrouter.ai/api/v1/auth/key)

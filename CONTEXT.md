@@ -18,7 +18,8 @@ Whatever scores an Agent's answer. Two kinds here: the Jev Judge and the LLM Jud
 _Avoid_: grader, scorer, critic
 
 **Jev**:
-TypeSafe AI's hosted System One decision model. Returns typed probabilities, no text.
+TypeSafe AI's System One decision model, reached through OpenRouter (`~typesafe/jev-latest`).
+Returns typed probabilities, no text.
 _Avoid_: jev LLM, TypeSafe model, judge model
 
 **LLM Judge**:

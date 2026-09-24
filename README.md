@@ -3,7 +3,7 @@
 A tiny STAR interview-answer coach, scored by two Judges side by side: **Jev**,
 TypeSafe's System One decision model, which returns typed probabilities and no
 prose, and an ordinary **LLM Judge** on the same axis. You write no code by hand:
-fill in three keys, run one check script, paste two prompts. You end on a LangSmith
+fill in two keys, run one check script, paste two prompts. You end on a LangSmith
 Experiment page with Jev's scores next to the LLM's.
 
 `CONTEXT.md` is the glossary — Agent, Judge, Question, Noul, Choice, Score, Rubric,
@@ -19,14 +19,13 @@ Dataset, Example, Experiment, Feedback. It is worth two minutes before you start
 
 ## 1. Keys
 
-Three keys, seven variables, one file: `.env` at the repo root. Copy
+Two keys, six variables, one file: `.env` at the repo root. Copy
 `.env.example` to `.env` and fill it in. `.env` is gitignored — never commit it,
 and never paste a key value into a Claude chat.
 
 | Key | Where it comes from | Goes in `.env` as |
 | --- | --- | --- |
-| TypeSafe (Jev) | handed to you — early access, no self-signup | `TYPESAFE_API_KEY` |
-| OpenRouter | handed to you, already topped up | `OPENROUTER_API_KEY` |
+| OpenRouter | handed to you, already topped up — pays for the Agent, the LLM Judge and Jev | `OPENROUTER_API_KEY` |
 | LangSmith | your own account: https://smith.langchain.com → Settings → **API keys** (free) | `LANGSMITH_API_KEY` |
 
 The other four are already filled in for you and should be left alone:
@@ -72,7 +71,7 @@ curl -fsSL https://claude.ai/install.sh | bash                           # Claud
 claude plugin marketplace add langchain-ai/langchain-plugins             # skip these three if the
 claude plugin install langchain-skills@langchain-plugins                 # trust dialog already did it
 claude plugin install langsmith-skills@langchain-plugins
-cp .env.example .env                                                     # paste the three keys from §1
+cp .env.example .env                                                     # paste the two keys from §1
 ```
 
 Either way, finish with:
@@ -145,7 +144,7 @@ already changed its API once. Don't upgrade it mid-session.
 
 | What you see | Cause | Fix |
 | --- | --- | --- |
-| 401 from TypeSafe, OpenRouter or LangSmith | key wrong or not loaded from `.env` | §1 Keys, then `bash scripts/check.sh` |
+| 401 from OpenRouter or LangSmith | key wrong or not loaded from `.env` | §1 Keys, then `bash scripts/check.sh` |
 | `TypeSafeClassifier` rejects a `questions` argument | the old `0.0.1a2` constructor form | Questions go in the `invoke` payload — ISSUE-0.md §5 |
 | `langgraph dev` starts, Studio shows no graph | `langgraph.json` doesn't point at the compiled graph | ISSUE-0.md §2 |
 | `langgraph: command not found` | CLI missing from the project | `uv run langgraph dev` |
