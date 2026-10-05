@@ -47,8 +47,12 @@ critique that scores *high*, not low. The learner's prediction is very likely to
 wrong, and that being wrong is the thing this issue teaches. Do not warn them out of
 it beforehand; let the Experiment say it.
 
-Adding, not recreating: the Dataset already exists and already holds three
-Examples. The eval script must end with four, not seven, and not a second Dataset.
+Adding, not recreating: the Dataset already exists, and ISSUE-0's eval script
+leaves an existing Dataset's Examples alone. So add this one Example to the
+existing Dataset only if it is not there yet, and add it to the create-path list
+too, so a fresh Dataset gets all four. After the run the Dataset holds exactly one
+more Example than ISSUE-0 left it with — 4 on a fresh workspace, not 7 — and there
+is still only one Dataset.
 
 ## 3. What must not change
 
@@ -56,14 +60,14 @@ The Agent's system prompt, its model, and the graph. The whole point of the seco
 Experiment is that the only moving parts are the Rubric and the Dataset. If the
 Agent changes too, neither Experiment explains the other.
 
-The diff of this commit touches the Questions module, the Examples, and
-`README.md`. Nothing else.
+The diff of this commit touches the Questions module, the Examples (and the code
+that adds them to the Dataset), and `README.md`. Nothing else.
 
 ## 4. Rerun and record
 
-`uv run python evals/run.py`. Then put both Experiment URLs in the README's §4
-table — the ISSUE-0 one and this one, labelled so a reader can tell which Rubric
-each ran under, plus the §2 prediction and the level Jev actually returned for the
+`uv run python evals/run.py`. Then put this Experiment's URL in the README's §4
+table under the ISSUE-0 one (if that row is still empty, take the URL from the
+Dataset's Experiments in LangSmith), plus the §2 prediction and the level Jev actually returned for the
 new Example. If that table is not in the README, add it under §4 in the same shape
 the README already uses.
 
@@ -73,7 +77,8 @@ One commit, message `custom rubric + failing example`.
 
 ## Acceptance — all five must pass
 
-1. The second Experiment has 4 Examples.
+1. The second Experiment covers every Example in the Dataset: one more than after
+   ISSUE-0, which is 4 on a fresh workspace.
 2. Its `feedback_quality` legend shows 4 levels, in the learner's order.
 3. The learner's prediction from §2 and the level Jev actually returned are both in
    the README table, with Jev's per-level probabilities and confidence for that
@@ -81,7 +86,8 @@ One commit, message `custom rubric + failing example`.
    comparison exists, not that the prediction was right. If they differ, say in one
    or two sentences what the probabilities suggest the Rubric rewarded instead.
 4. `git diff` between the ISSUE-0 commit and this one touches only the Questions
-   module, the Examples, and `README.md` — the Agent source is byte-identical.
+   module, the Examples and the code that adds them, and `README.md` — the Agent
+   source is byte-identical.
 5. The README §4 table holds both Experiment URLs.
 
 Stop and report on the first check that fails. Never edit the Example, the Rubric
@@ -100,5 +106,5 @@ instead.
 | Dataset has 7 Examples | Examples recreated instead of appended | §2 — add one to the existing Dataset |
 | A second Dataset appears in LangSmith | created under a new name | the name stays `interview-coach-09c` |
 | The legend still shows 3 levels | the Experiment ran against the old Questions module | rerun `uv run python evals/run.py` after the edit |
-| No §4 table in the README | ISSUE-0 ran before the README existed | §4 — add the table |
+| Dataset still has the old count | the new Example sits only in the create path, which an existing Dataset skips | §2 — add it to the existing Dataset when absent |
 | `git diff` also touches the Agent | the prompt was "improved" along the way | §3 — revert the Agent, rerun |

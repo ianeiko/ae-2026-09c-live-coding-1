@@ -3,16 +3,15 @@
 #   ok       this step is done
 #   MISSING  you have to fix it -> the README section that says how
 #   todo     not your job yet — ISSUE-0.md creates it in §4
+#   skip     a key probe could not run (offline or an unexpected answer) — re-run later
 # Exits non-zero if any line says MISSING. Works in Git Bash on Windows.
 cd "$(dirname "$0")/.."
 fail=0
-PY=$(command -v python3 || command -v python)   # python3 on macOS, often just python on Windows
 ok()   { printf 'ok       %s\n' "$1"; }
 miss() { printf 'MISSING  %-40s -> %s\n' "$1" "$2"; fail=1; }
 todo() { printf 'todo     %-40s -> %s\n' "$1" "$2"; }
 
 for c in git uv claude; do command -v "$c" >/dev/null 2>&1 && ok "$c" || miss "$c" "Appendix A"; done
-[ -n "$PY" ] && ok "python ($PY)" || miss "python3 or python" "Appendix A"
 
 # Both plugins come from .claude/settings.json when you accept the trust dialog.
 PL=$(claude plugin list 2>/dev/null)
@@ -30,36 +29,37 @@ for v in OPENROUTER_API_KEY OPENROUTER_BASE_URL OPENROUTER_MODEL \
 done
 
 getenv() { grep -E "^$1=" .env 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\r' | sed 's/[[:space:]]*$//'; }
-online() { curl -s -m 5 -o /dev/null "$1" 2>/dev/null; }   # any HTTP answer means the net is up
 
-# Live key probes. Each one is skipped, not failed, when the host is unreachable.
-k=$(getenv OPENROUTER_API_KEY)
+# Live key probes. Each one is skipped, not failed, when there is no clear answer.
+envset .env OPENROUTER_API_KEY && k=$(getenv OPENROUTER_API_KEY) || k=
 if [ -n "$k" ]; then
-  code=$(curl -s -m 8 -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $k" https://openrouter.ai/api/v1/auth/key)
+  r=$(curl -s -m 8 -w '\n%{http_code}' -H "Authorization: Bearer $k" https://openrouter.ai/api/v1/key)
+  code=${r##*$'\n'}
   case "$code" in
     200) ok "OpenRouter key accepted"
-         bal=$(curl -s -m 8 -H "Authorization: Bearer $k" https://openrouter.ai/api/v1/credits \
-               | "$PY" -c 'import json,sys;d=json.load(sys.stdin)["data"];print(f"{d["total_credits"]-d["total_usage"]:.2f}")' 2>/dev/null)
-         if [ -n "$bal" ]; then
-           "$PY" -c "import sys;sys.exit(0 if $bal>0 else 1)" && ok "OpenRouter credit (\$$bal left)" \
-             || miss "OpenRouter credit (\$$bal left)" "§1 Keys — ask for a topped-up key"
-         fi ;;
+         # Per-key spending limit; null means the key has none, so there is nothing to read.
+         left=$(printf '%s' "${r%$'\n'*}" | tr -d ' \n' | sed -n 's/.*"limit_remaining":\([^,}]*\).*/\1/p')
+         case "$left" in
+           ''|null) echo "skip     OpenRouter credit (key has no spending limit to read)" ;;
+           *[!0-9.eE+-]*) echo "skip     OpenRouter credit (unreadable answer)" ;;
+           *) awk "BEGIN{exit !($left>0)}" && ok "OpenRouter credit (\$$left left on this key)" \
+                || miss "OpenRouter credit (\$$left left on this key)" "§1 Keys — ask for a topped-up key" ;;
+         esac ;;
     401|403) miss "OpenRouter key rejected ($code)" "§1 Keys — check the OpenRouter key you were given" ;;
-    *)       online https://openrouter.ai/api/v1/auth/key \
-               && ok "OpenRouter reachable (HTTP $code, key not checked)" \
-               || echo "skip     OpenRouter key probe (offline)" ;;
+    000)     echo "skip     OpenRouter key probe (offline)" ;;
+    *)       echo "skip     OpenRouter key probe (unexpected HTTP $code — re-run later)" ;;
   esac
 fi
 
-l=$(getenv LANGSMITH_API_KEY)
+envset .env LANGSMITH_API_KEY && l=$(getenv LANGSMITH_API_KEY) || l=
 if [ -n "$l" ]; then
-  code=$(curl -s -m 8 -o /dev/null -w '%{http_code}' -H "x-api-key: $l" 'https://api.smith.langchain.com/api/v1/sessions?limit=1')
+  ep=$(getenv LANGSMITH_ENDPOINT); ep=${ep:-https://api.smith.langchain.com}   # non-US accounts set it — §1
+  code=$(curl -s -m 8 -o /dev/null -w '%{http_code}' -H "x-api-key: $l" "${ep%/}/api/v1/sessions?limit=1")
   case "$code" in
     200)     ok "LangSmith key accepted" ;;
-    401|403) miss "LangSmith key rejected ($code)" "§1 Keys — make a new key in LangSmith Settings" ;;
-    *)       online 'https://api.smith.langchain.com/api/v1/sessions?limit=1' \
-               && ok "LangSmith reachable (HTTP $code, key not checked)" \
-               || echo "skip     LangSmith key probe (offline)" ;;
+    401|403) miss "LangSmith key rejected ($code)" "§1 Keys — new key, or the non-US note" ;;
+    000)     echo "skip     LangSmith key probe (offline)" ;;
+    *)       echo "skip     LangSmith key probe (unexpected HTTP $code — re-run later)" ;;
   esac
 fi
 

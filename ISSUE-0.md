@@ -210,15 +210,18 @@ per Feedback key — not the tracing-project URL.
 
 ## 8. Commit
 
-One commit, message `scaffold STAR coach agent + first jev experiment`.
+Put the Experiment URL from check 3 in the first row of README §4's Experiment
+table. Then one commit, message `scaffold STAR coach agent + first jev experiment`.
 
 ## Acceptance — all six must pass
 
 1. `bash scripts/check.sh` prints `all set`, and the two former `todo` lines now
    read `ok`.
-2. `langgraph dev` starts. In Studio, a behavioural question plus a draft answer
-   comes back as four named Beat critiques followed by a rewrite; a pasted recipe
-   comes back as one redirect sentence and nothing else.
+2. `uv run langgraph dev --no-browser` starts. Through its local API
+   (`http://127.0.0.1:2024`), a behavioural question plus a draft answer comes back
+   as four named Beat critiques followed by a rewrite; a pasted recipe comes back as
+   one redirect sentence and nothing else. Then tell the learner to try both in
+   Studio themselves.
 3. `uv run python evals/run.py` ends by printing a LangSmith Experiment URL.
 4. That Experiment has the four Feedback keys `covers_all_star`,
    `feedback_quality`, `verdict`, `llm_covers_all_star`, each with a non-empty
@@ -229,21 +232,25 @@ One commit, message `scaffold STAR coach agent + first jev experiment`.
    that Dataset holds: reuse it as it stands, report the count, and do not delete
    or overwrite it to make the number come out at 3 — that orphans the Experiments
    already attached to it.
-5. The off-topic Example has `verdict = off_topic` and the lowest
-   `feedback_quality` of the three; the other two Examples both score above it, and
-   the strong Example's `verdict` is `strong`.
+5. Report each §3 Example's observed `verdict` and `feedback_quality`. Expected:
+   the off-topic Example gets `verdict = off_topic` and the lowest
+   `feedback_quality` of the three, and the strong Example gets `verdict = strong`.
+   If not, revise the Question wording (§5, never an Example) once and rerun. If it
+   is still off, show the learner the numbers and let them decide whether to commit
+   — `jev-latest` can move under the cohort, and this is a judgement, not a build.
 
    Note what this does *not* ask: that the strong Example outscore the
    missing-Result one on `feedback_quality`. That Score judges the critique, and a
    critique that names an absent Beat is usually every bit as actionable as one
    that praises four present Beats — Jev puts them within a few hundredths of each
-   other. A ranking between them is not a thing this Rubric produces, and chasing
+   other in rehearsal. A ranking between them is not a thing this Rubric produces, and chasing
    one means editing Questions until the metric agrees with you.
 6. Running `uv run python evals/run.py` a second time reuses the Dataset — same
    Example count as the first run, no second Dataset — and creates a second
    Experiment.
 
-Stop and report on the first check that fails. Do not commit a failing check.
+Stop and report on the first check that fails. Do not commit a failing check —
+the one exception is the learner's call in check 5.
 
 ## Failure modes
 

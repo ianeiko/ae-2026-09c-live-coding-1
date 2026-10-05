@@ -11,7 +11,7 @@ Dataset, Example, Experiment, Feedback. It is worth two minutes before you start
 
 ## TL;DR
 
-1. **Keys** (§1) — two handed to you, one from your own LangSmith account.
+1. **Keys** (§1) — one handed to you, one from your own LangSmith account.
 2. **Clone** (§2) — clone this repo. No fork.
 3. **Tools** (§3) — paste one prompt into Claude, or run the commands.
    `bash scripts/check.sh` tells you when you're done.
@@ -37,6 +37,13 @@ from https://openrouter.ai/models works, copied exactly), `LANGCHAIN_TRACING_V2`
 If `scripts/check.sh` says a key was **rejected**, it is this section you come back
 to: the key is wrong or expired, not the code.
 
+> **LangSmith key rejected, but it's brand new?** Check the address of your
+> LangSmith tab. If it is `eu.smith.langchain.com` (or `apac.` / `aws.`), your
+> account lives outside the US region, and the check and the app call the US API by
+> default. Add one line to `.env` and re-run the check:
+> `LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com` — swap `eu` for your
+> region.
+
 ## 2. Clone
 
 No fork. Everything you produce stays on your machine and in your own LangSmith
@@ -61,7 +68,7 @@ Then pick one of the two paths. Commands are macOS — on Windows use Appendix C
 
 Paste this into Claude:
 
-> Set this machine up for this repo. Run `bash scripts/check.sh` and fix every MISSING line until it prints `all set`; README §1 and §3 and Appendix A say what each step is. Install tools yourself (Homebrew, uv) and the two plugins (`langchain-skills@langchain-plugins`, `langsmith-skills@langchain-plugins`). Logins and anything that asks for a password are mine: give me the command, I'll run it in another terminal and say "done". Copy `.env.example` to `.env` and tell me which three values to paste where — never ask me to paste a key into this chat, and never print one. `todo` lines about the app are expected, leave them. Don't scaffold or write any app code yet, that's §4. Re-run the check after each fix.
+> Set this machine up for this repo. Run `bash scripts/check.sh` and fix every MISSING line until it prints `all set`; README §1 and §3 and Appendix A say what each step is. Install tools yourself (Homebrew, uv) and the two plugins (`langchain-skills@langchain-plugins`, `langsmith-skills@langchain-plugins`). Logins and anything that asks for a password are mine: give me the command, I'll run it in another terminal and say "done". Copy `.env.example` to `.env` and tell me which two values to paste where — never ask me to paste a key into this chat, and never print one. `todo` lines about the app are expected, leave them. Don't scaffold or write any app code yet, that's §4. Re-run the check after each fix.
 
 ### The manual way
 
@@ -82,7 +89,8 @@ bash scripts/check.sh      # all set — go to §4
 
 The two `todo` lines about `pyproject.toml` and `langgraph.json` are expected here:
 this repo ships **no app code**, and §4 is what creates it. Only `MISSING` lines
-block you. A `skip` line means you're offline — the key probes were not run.
+block you. A `skip` line means a key probe got no clear answer (offline, or the
+service hiccuped) — re-run it before §4.
 
 ## 4. Hand off to Claude
 
@@ -97,7 +105,7 @@ Prompt one — your own Rubric, a fourth Example, and a prediction about it:
 
 > Read ISSUE-1.md and implement it. Ask me for the four Rubric levels, and for my prediction, before you edit anything. Stop and tell me if one of its five acceptance checks fails; commit when they all pass.
 
-Claude records both Experiment URLs here when ISSUE-1 is done:
+Claude fills in each row as it finishes that issue:
 
 | Experiment | `feedback_quality` Rubric | Examples | URL |
 | --- | --- | --- | --- |
@@ -112,8 +120,7 @@ And your prediction for the Example you added, against what Jev said:
 
 Open both Experiments in LangSmith and compare the `feedback_quality` column. That
 comparison is the point of the session — and if your prediction was wrong, that row
-is the most useful thing on this page. A Rubric that rates *critiques* does not rate
-*answers*: a bad draft is an easy draft to critique well.
+is the most useful thing on this page.
 
 ## Appendix A — what should be on your machine
 
@@ -176,5 +183,4 @@ replacement is the `brew install` line of the manual way.
 | --- | --- |
 | `bash: scripts/check.sh: No such file` | you're in PowerShell or `cmd` — reopen Git Bash |
 | `uv: command not found` in Git Bash | reopen Git Bash after installing; if it persists, restart Windows |
-| `python3: command not found` | check.sh falls back to `python`; only the OpenRouter credit line needs it |
 | CRLF warnings from git | harmless — `git config core.autocrlf input` quiets them |
